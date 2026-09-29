@@ -1,17 +1,9 @@
-import type React from "react";
 import axios from "axios";
-
-import { FaArrowUp } from "react-icons/fa";
-import { Button } from "../ui/button";
-import { useForm } from "react-hook-form";
 import { useRef, useState } from "react";
 import TypingIndicator from "./TypingIndicator";
 import type { Message } from "./ChatMessages";
 import ChatMessages from "./ChatMessages";
-
-type FormData = {
-	prompt: string;
-};
+import ChatInput, { type ChatFormData } from "./ChatInput";
 
 type ChatResponse = {
 	message: string;
@@ -23,10 +15,8 @@ const ChatBot = () => {
 	const [error, setError] = useState("");
 
 	const conversationId = useRef(crypto.randomUUID());
-	const { register, handleSubmit, reset, formState } =
-		useForm<FormData>();
 
-	const onSubmit = async (formData: FormData) => {
+	const onSubmit = async (formData: ChatFormData) => {
 		try {
 			setMessages((prev) => [
 				...prev,
@@ -34,7 +24,6 @@ const ChatBot = () => {
 			]);
 			setIsBotTyping(true);
 			setError("");
-			reset({ prompt: "" });
 
 			const { data } = await axios.post<ChatResponse>(
 				"/api/chat",
@@ -54,12 +43,6 @@ const ChatBot = () => {
 			setIsBotTyping(false);
 		}
 	};
-	const onKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
-		if (e.key === "Enter" && !e.shiftKey) {
-			e.preventDefault();
-			handleSubmit(onSubmit)();
-		}
-	};
 
 	return (
 		<div className='flex flex-col h-full'>
@@ -71,29 +54,7 @@ const ChatBot = () => {
 				)}
 			</div>
 
-			<form
-				onSubmit={handleSubmit(onSubmit)}
-				onKeyDown={onKeyDown}
-				className='flex flex-col gap-2 items-end border-2 p-4 rounded-lg'>
-				<textarea
-					{...register("prompt", {
-						required: true,
-						validate: (data) =>
-							data.trim().length > 0,
-					})}
-					autoFocus
-					className='w-full border-0 focus:outline-0 resize-none'
-					placeholder='Ask anything'
-					maxLength={1000}
-				/>
-
-				<Button
-					type='submit'
-					disabled={!formState.isValid}
-					className='rounded-full size-9'>
-					<FaArrowUp />
-				</Button>
-			</form>
+			<ChatInput onSubmit={onSubmit} />
 		</div>
 	);
 };
