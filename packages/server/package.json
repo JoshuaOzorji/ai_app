@@ -17,6 +17,7 @@
 	},
 	"dependencies": {
 		"@prisma/client": "6.13.0",
+		"dayjs": "^1.11.23",
 		"express": "^5.2.1",
 		"openai": "^7.21.0",
 		"zod": "^4.6.5"

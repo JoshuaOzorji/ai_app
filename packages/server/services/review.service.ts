@@ -9,6 +9,12 @@ export const reviewService = {
 	},
 
 	async summarizeReviews(productId: number): Promise<string> {
+		const existingSummary =
+			await reviewRepository.getReviewSummary(productId);
+		if (existingSummary && existingSummary.expiresAt > new Date()) {
+			return existingSummary.content;
+		}
+
 		const reviews = await reviewRepository.getReviews(
 			productId,
 			10,
@@ -19,13 +25,15 @@ export const reviewService = {
 
 		const prompt = template.replace("{{reviews}}", joinedReviews);
 
-		const response = await llmClient.generateText({
+		const { text: summary } = await llmClient.generateText({
 			model: "gpt-4.1",
 			prompt,
 			temperature: 0.2,
-			maxTokens: 500,
+			maxTokens: 200,
 		});
 
-		return response.text;
+		await reviewRepository.storeReviewSummary(productId, summary);
+
+		return summary;
 	},
 };
